@@ -1,0 +1,32 @@
+langchain
+langchain-community
+langchain-core
+pypdf
+pymupdf
+# faiss-cpu
+# chromadb
+sentence-transformers
+fastapi  
+uvicorn[standard]
+pydantic
+pydantic-settings 
+sqlalchemy 
+pandas 
+polars 
+# duckdb 
+plotly 
+redis 
+loguru 
+python-dotenv 
+langgraph 
+ollama 
+streamlit 
+pytest
+pytest-asyncio
+httpx
+aiosqlite 
+faker
+langgraph
+langchain-ollama    
+    langchain-google-genai
+    python-multipart

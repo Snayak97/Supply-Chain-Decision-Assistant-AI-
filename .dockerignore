@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+
+.git
+.gitignore
+
+.env
+
+logs/
+
+venv/
+.venv/
+
+.pytest_cache/
+
+sc_ai.db
