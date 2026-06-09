@@ -285,6 +285,7 @@ async def simulate_scenario(request: ScenarioRequest):
         return scenario_result
         
     except Exception as e:
+        print("ERROR:", str(e))
         raise HTTPException(status_code=500, detail=f"Scenario simulation failed: {str(e)}")
 
 

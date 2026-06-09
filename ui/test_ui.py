@@ -2,13 +2,26 @@ import streamlit as st
 import requests
 import plotly.graph_objects as go
 import pandas as pd
+from dotenv import load_dotenv
+import os
+load_dotenv(override=True)
+
 
 # ─── Config ───────────────────────────────────────────────
 # API_URL = "http://127.0.0.1:8000/scenario/simulate"
 # RESET_URL = "http://127.0.0.1:8000/scenario/reset"
 
-API_URL = "http://api:8000/scenario/simulate"
-RESET_URL = "http://api:8000/scenario/reset"
+# API_URL = "http://api:8000/scenario/simulate"
+# RESET_URL = "http://api:8000/scenario/reset"
+
+
+
+BACKEND_URL = os.getenv("BACKEND_URL", "http://api:8000")
+API_URL = f"{BACKEND_URL}/scenario/simulate"
+RESET_URL = f"{BACKEND_URL}/scenario/reset"
+print("BACKEND_URL:", BACKEND_URL)
+print("API_URL:", API_URL)
+print("RESET_URL:", RESET_URL)
 
 st.set_page_config(
     page_title="SC Decision Assistant",
