@@ -1,4 +1,8 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from dotenv import load_dotenv
+import os
+load_dotenv(override=True)
+APP_ENV = os.getenv("APP_ENV", "dev")
 
 class Settings(BaseSettings):
     APP_NAME: str
@@ -38,7 +42,9 @@ class Settings(BaseSettings):
     # RAZORPAY_KEY_ID : str
     # RAZORPAY_KEY_SECRET : str
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=f".env.{APP_ENV}", extra="ignore")
+    
 
 
 

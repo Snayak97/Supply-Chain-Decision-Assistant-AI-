@@ -1,3 +1,5 @@
+
+
 """
 Enhanced sample data generation script with realistic business data.
 Generates mock data for all database models to support scenario simulation.
@@ -20,7 +22,6 @@ from core.database.models import (
 
 fake = Faker()
 
-# Initialize database
 db: Session = SessionLocal()
 
 # =========================
@@ -32,7 +33,6 @@ channels = ["DTC", "Wholesale"]
 warehouses = ["MUM_WH1", "DEL_WH1", "BLR_WH1"]
 suppliers = ["Supplier_A", "Supplier_B", "Supplier_C", "Supplier_D"]
 
-# Business-realistic parameters
 SKU_COUNT = 100
 FORECAST_HORIZON_DAYS = 90
 BASE_DATE = datetime(2026, 6, 1)
@@ -44,12 +44,14 @@ BASE_DATE = datetime(2026, 6, 1)
 print("Generating SKU master data...")
 
 for i in range(SKU_COUNT):
+    # ✅ Skip if already exists
+    if db.query(SKUMaster).filter_by(sku_id=f"SKU{i:03}").first():
+        continue
+
     category = random.choice(categories)
     channel = random.choice(channels)
-    
-    # Core SKUs are more valuable (higher margin, lower MOQ)
-    is_core = random.random() < 0.3  # 30% are core SKUs
-    
+    is_core = random.random() < 0.3
+
     if is_core:
         gross_margin = random.uniform(45, 65)
         moq = random.randint(50, 200)
@@ -58,7 +60,7 @@ for i in range(SKU_COUNT):
         gross_margin = random.uniform(20, 45)
         moq = random.randint(100, 500)
         unit_cost = random.uniform(15, 60)
-    
+
     sku = SKUMaster(
         sku_id=f"SKU{i:03}",
         category=category,
@@ -72,6 +74,7 @@ for i in range(SKU_COUNT):
     db.add(sku)
 
 db.commit()
+print("SKU master data done.")
 
 # =========================
 # FORECAST WITH CI
@@ -83,27 +86,27 @@ for i in range(SKU_COUNT):
     sku_id = f"SKU{i:03}"
     category = random.choice(categories)
     channel = random.choice(channels)
-    
-    # Generate forecast for each day in horizon
+
     for day_offset in range(FORECAST_HORIZON_DAYS):
         forecast_date = (BASE_DATE + timedelta(days=day_offset)).strftime("%Y-%m-%d")
-        
-        # Base forecast with some seasonality
+
+        # ✅ Skip if already exists
+        if db.query(Forecast).filter_by(sku_id=sku_id, date=forecast_date, channel=channel).first():
+            continue
+
         base_qty = random.randint(50, 300)
-        if day_offset < 30:  # First month higher
+        if day_offset < 30:
             base_qty = int(base_qty * 1.2)
-        
-        # Campaign uplift (10-30% increase)
+
         campaign_multiplier = random.uniform(1.0, 1.3)
         adjusted_qty = int(base_qty * campaign_multiplier)
-        
-        # Confidence intervals (80% and 95%)
-        ci_width = random.uniform(0.2, 0.4)  # 20-40% CI width
+
+        ci_width = random.uniform(0.2, 0.4)
         lower_80 = int(adjusted_qty * (1 - ci_width))
         upper_80 = int(adjusted_qty * (1 + ci_width))
         lower_95 = int(adjusted_qty * (1 - ci_width * 1.5))
         upper_95 = int(adjusted_qty * (1 + ci_width * 1.5))
-        
+
         forecast = Forecast(
             sku_id=sku_id,
             category=category,
@@ -120,6 +123,7 @@ for i in range(SKU_COUNT):
         db.add(forecast)
 
 db.commit()
+print("Forecast data done.")
 
 # =========================
 # INVENTORY POSITION
@@ -129,16 +133,18 @@ print("Generating inventory position data...")
 
 for i in range(SKU_COUNT):
     sku_id = f"SKU{i:03}"
-    
+
     for warehouse in warehouses:
         for channel in channels:
-            # On-hand inventory varies by warehouse/channel
+            # ✅ Skip if already exists
+            if db.query(Inventory).filter_by(sku_id=sku_id, warehouse=warehouse, channel=channel).first():
+                continue
+
             on_hand = random.randint(100, 800)
             in_transit = random.randint(0, 200)
             reserved = random.randint(10, 100)
-            
             net_available = on_hand + in_transit - reserved
-            
+
             inventory = Inventory(
                 sku_id=sku_id,
                 warehouse=warehouse,
@@ -151,26 +157,29 @@ for i in range(SKU_COUNT):
             db.add(inventory)
 
 db.commit()
+print("Inventory data done.")
 
 # =========================
-# SALES ACTUALS (Historical)
+# SALES ACTUALS
 # =========================
 
 print("Generating historical sales actuals...")
 
-# Generate 30 days of historical data
 for day_offset in range(30, 0, -1):
     sales_date = (BASE_DATE - timedelta(days=day_offset)).strftime("%Y-%m-%d")
-    
+
     for i in range(SKU_COUNT):
         sku_id = f"SKU{i:03}"
         category = random.choice(categories)
         channel = random.choice(channels)
-        
-        # Actual sales with some variance from forecast
+
+        # ✅ Skip if already exists
+        if db.query(SalesActual).filter_by(sku_id=sku_id, date=sales_date, channel=channel).first():
+            continue
+
         actual_qty = random.randint(40, 350)
         revenue = actual_qty * random.uniform(40, 100)
-        
+
         sales = SalesActual(
             sku_id=sku_id,
             category=category,
@@ -182,6 +191,7 @@ for day_offset in range(30, 0, -1):
         db.add(sales)
 
 db.commit()
+print("Sales actuals done.")
 
 # =========================
 # PURCHASE ORDERS
@@ -193,26 +203,29 @@ PO_COUNT = 50
 
 for i in range(PO_COUNT):
     po_number = f"PO{i:04}"
+
+    # ✅ Skip if already exists
+    if db.query(PurchaseOrder).filter_by(po_number=po_number).first():
+        continue
+
     sku_id = f"SKU{random.randint(0, SKU_COUNT-1):03}"
     category = random.choice(categories)
     supplier = random.choice(suppliers)
-    
+
     ordered_qty = random.randint(100, 1000)
     unit_cost = random.uniform(30, 80)
     total_value = ordered_qty * unit_cost
-    
-    # Delivery date in next 2-8 weeks
+
     delivery_days = random.randint(14, 56)
     expected_delivery = (BASE_DATE + timedelta(days=delivery_days)).strftime("%Y-%m-%d")
-    
-    # Cancelable if delivery is more than 2 weeks away
+
     is_cancelable = delivery_days > 14
     cancelable_until = (BASE_DATE + timedelta(days=14)).strftime("%Y-%m-%d") if is_cancelable else None
-    
+
     status = random.choice(["OPEN", "IN_TRANSIT"])
     if delivery_days < 21:
         status = "IN_TRANSIT"
-    
+
     po = PurchaseOrder(
         po_number=po_number,
         sku_id=sku_id,
@@ -231,6 +244,7 @@ for i in range(PO_COUNT):
     db.add(po)
 
 db.commit()
+print("Purchase orders done.")
 
 # =========================
 # LEAD TIMES
@@ -240,10 +254,13 @@ print("Generating lead time distributions...")
 
 for supplier in suppliers:
     for category in categories:
-        # Lead times vary by supplier and category
+        # ✅ Skip if already exists
+        if db.query(LeadTime).filter_by(supplier=supplier, category=category).first():
+            continue
+
         base_lead = random.randint(14, 35)
         std_dev = random.uniform(3, 7)
-        
+
         lead = LeadTime(
             supplier=supplier,
             category=category,
@@ -255,6 +272,7 @@ for supplier in suppliers:
         db.add(lead)
 
 db.commit()
+print("Lead times done.")
 
 # =========================
 # OTB PLAN
@@ -266,26 +284,27 @@ periods = ["2026-Q2", "2026-Q3"]
 
 for category in categories:
     for period in periods:
-        # Budget varies by category and period
+        # ✅ Skip if already exists
+        if db.query(OTBPlan).filter_by(category=category, period=period).first():
+            continue
+
         if category == "Apparel":
             budget = random.randint(400000, 600000)
         elif category == "Shoes":
             budget = random.randint(300000, 500000)
-        else:  # Accessories
+        else:
             budget = random.randint(200000, 400000)
-        
-        # Committed spend is 60-90% of budget
+
         committed = int(budget * random.uniform(0.6, 0.9))
         available = budget - committed
         utilization = (committed / budget) * 100
-        
-        # Some categories may be overcommitted
-        is_overcommitted = random.random() < 0.2  # 20% chance
+
+        is_overcommitted = random.random() < 0.2
         if is_overcommitted:
             committed = int(budget * random.uniform(1.05, 1.2))
             available = budget - committed
             utilization = (committed / budget) * 100
-        
+
         otb = OTBPlan(
             category=category,
             period=period,
@@ -298,13 +317,13 @@ for category in categories:
         db.add(otb)
 
 db.commit()
+print("OTB plans done.")
 
 db.close()
 
 print("\n" + "="*50)
 print("Mock data generation complete!")
 print("="*50)
-print(f"Generated data for:")
 print(f"  - {SKU_COUNT} SKUs across {len(categories)} categories")
 print(f"  - {SKU_COUNT * FORECAST_HORIZON_DAYS} forecast records")
 print(f"  - {SKU_COUNT * len(warehouses) * len(channels)} inventory records")
@@ -312,144 +331,3 @@ print(f"  - {PO_COUNT} purchase orders")
 print(f"  - {len(suppliers) * len(categories)} lead time records")
 print(f"  - {len(categories) * len(periods)} OTB plan records")
 print("="*50)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# import random
-# from faker import Faker
-# from sqlalchemy.orm import Session
-
-# from core.database.session import SessionLocal
-# from core.database.models import (
-#     SKUMaster,
-#     Forecast,
-#     Inventory,
-#     OTBPlan,
-#     SalesActual
-# )
-
-# fake = Faker()
-
-# db: Session = SessionLocal()
-
-# categories = [
-#     "Apparel",
-#     "Shoes",
-#     "Accessories"
-# ]
-
-# channels = [
-#     "DTC",
-#     "Wholesale"
-# ]
-
-# warehouses = [
-#     "MUM_WH1",
-#     "DEL_WH1"
-# ]
-
-# print("Generating SKU master data...")
-
-# for i in range(50):
-
-#     sku = SKUMaster(
-#         sku_id=f"SKU{i:03}",
-#         category=random.choice(categories),
-#         channel=random.choice(channels),
-#         is_core=random.choice([True, False]),
-#         gross_margin_pct=random.uniform(20, 60),
-#         moq=random.randint(50, 500)
-#     )
-
-#     db.add(sku)
-
-# db.commit()
-
-# print("Generating forecast data...")
-
-# for i in range(50):
-
-#     forecast = Forecast(
-#         sku_id=f"SKU{i:03}",
-#         category=random.choice(categories),
-#         channel=random.choice(channels),
-#         date="2026-06-01",
-#         forecast_qty=random.randint(50, 500),
-#         lower_ci=random.randint(30, 100),
-#         upper_ci=random.randint(500, 700)
-#     )
-
-#     db.add(forecast)
-
-# db.commit()
-
-# print("Generating inventory data...")
-
-# for i in range(50):
-
-#     inventory = Inventory(
-#         sku_id=f"SKU{i:03}",
-#         warehouse=random.choice(warehouses),
-#         on_hand_qty=random.randint(100, 1000),
-#         reserved_qty=random.randint(10, 100)
-#     )
-
-#     db.add(inventory)
-
-# db.commit()
-
-# print("Generating OTB data...")
-
-# for category in categories:
-
-#     otb = OTBPlan(
-#         category=category,
-#         budget=random.randint(100000, 500000),
-#         committed_spend=random.randint(50000, 450000)
-#     )
-
-#     db.add(otb)
-
-# db.commit()
-
-
-
-
-# print("Generating sales actuals...")
-
-# for i in range(50):
-
-#     sales = SalesActual(
-
-#         sku_id=f"SKU{i:03}",
-
-#         category=random.choice(categories),
-
-#         channel=random.choice(channels),
-
-#         date="2026-06-01",
-
-#         actual_sales_qty=random.randint(40, 550)
-#     )
-
-#     db.add(sales)
-
-# db.commit()
-
-
-# db.close()
-
-# print("Mock data generation complete.")

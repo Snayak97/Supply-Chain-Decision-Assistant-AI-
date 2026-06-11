@@ -567,94 +567,7 @@ with right:
                 df.columns = ["SKU", "Category", "Channel", "Core", "Risk", "Stockout %", "Revenue at Risk", "Inventory"]
                 st.dataframe(df, use_container_width=True, hide_index=True)
 
-        # ══ TAB 3: OTB ═══════════════════════════════════
-#         with tab3:
-#             c1, c2, c3 = st.columns(3)
-
-#             avail = otb.get("total_available", 0)
-#             avail_color = "negative" if avail < 0 else "positive"
-
-#             with c1:
-#                 st.markdown(f"""
-#                 <div class="metric-card">
-#                     <div class="metric-label">Total Budget</div>
-#                     <div class="metric-value">{fmt_currency(otb.get("total_budget", 0))}</div>
-#                 </div>""", unsafe_allow_html=True)
-
-#             with c2:
-#                 st.markdown(f"""
-#                 <div class="metric-card">
-#                     <div class="metric-label">Committed Spend</div>
-#                     <div class="metric-value warning">{fmt_currency(otb.get("total_committed", 0))}</div>
-#                 </div>""", unsafe_allow_html=True)
-
-#             with c3:
-#                 st.markdown(f"""
-#                 <div class="metric-card">
-#                     <div class="metric-label">Available OTB</div>
-#                     <div class="metric-value {avail_color}">{fmt_currency(avail)}</div>
-#                 </div>""", unsafe_allow_html=True)
-
-#             # OTB by category
-#             cat_positions = otb.get("category_positions", [])
-#             if cat_positions:
-#                 st.markdown('<div class="section-title" style="margin-top:16px">OTB by Category & Period</div>', unsafe_allow_html=True)
-# #                 for pos in cat_positions:
-# #                     util = pos.get("utilization_pct", 0)
-# #                     over = pos.get("is_overcommitted", False)
-# #                     bar_color = "#f87171" if over else "#34d399"
-# #                     bar_width = min(util, 200)
-# #                     label_color = "#f87171" if over else "#34d399"
-
-# #                     st.markdown(f"""
-# #                     <div class="metric-card" style="padding:14px 20px;margin-bottom:8px">
-# #                         <div style="display:flex;justify-content:space-between;align-items:center">
-# #                             <div>
-# #                                 <span style="font-weight:600;color:#e5e7eb">{pos['category']}</span>
-# #                                 <span style="color:#6b7280;font-size:12px;margin-left:8px">{pos['period']}</span>
-# #                                 {"<span style='color:#f87171;font-size:11px;margin-left:8px;font-weight:600'>● OVERCOMMITTED</span>" if over else ""}
-# #                             </div>
-# #                             <div style="color:{label_color};font-weight:700;font-size:15px">{util:.1f}%</div>
-# #                         </div>
-# #                         <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:#6b7280">
-# #                             <span>Budget: {fmt_currency(pos['budget'])}</span>
-# #                             <span>Committed: {fmt_currency(pos['committed_spend'])}</span>
-# #                             <span>Available: {fmt_currency(pos['available_otb'])}</span>
-# #                         </div>
-# #                         <div class="otb-bar-bg">
-# #                             <div class="otb-bar-fill" style="width:{bar_width}%;background:{bar_color}"></div>
-# #                         </div>
-# #                     </div>
-# #                     """, unsafe_allow_html=True)
-# # # 
-#                 for pos in cat_positions:
-#                     util = pos.get("utilization_pct", 0)
-#                     over = pos.get("is_overcommitted", False)
-#                     bar_color = "#f87171" if over else "#34d399"
-#                     bar_width = min(util, 100)
-#                     label_color = "#f87171" if over else "#34d399"
-#                     overcommit_badge = "<span style='color:#f87171;font-size:11px;margin-left:8px;font-weight:600'>● OVERCOMMITTED</span>" if over else ""
-
-#                     st.markdown(f"""
-#     <div class="metric-card" style="padding:14px 20px;margin-bottom:8px">
-#         <div style="display:flex;justify-content:space-between;align-items:center">
-#             <div>
-#                 <span style="font-weight:600;color:#e5e7eb">{pos['category']}</span>
-#                 <span style="color:#6b7280;font-size:12px;margin-left:8px">{pos['period']}</span>
-#                 {overcommit_badge}
-#             </div>
-#             <div style="color:{label_color};font-weight:700;font-size:15px">{util:.1f}%</div>
-#         </div>
-#         <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:#6b7280">
-#             <span>Budget: {fmt_currency(pos['budget'])}</span>
-#             <span>Committed: {fmt_currency(pos['committed_spend'])}</span>
-#             <span>Available: {fmt_currency(pos['available_otb'])}</span>
-#         </div>
-#         <div class="otb-bar-bg">
-#             <div class="otb-bar-fill" style="width:{bar_width}%;background:{bar_color}"></div>
-#         </div>
-#     </div>
-#     """, unsafe_allow_html=True)
+     
 
         # ══ TAB 3: OTB ═══════════════════════════════════
         with tab3:
@@ -797,18 +710,3 @@ with right:
             st.markdown('<div class="section-title" style="margin-top:20px">Raw Perturbations</div>', unsafe_allow_html=True)
             for p in result.get("perturbations", []):
                 st.json(p)
-
-
-# import subprocess
-# import sys
-
-# if __name__ == "__main__":
-#     subprocess.run([
-#         sys.executable,
-#         "-m",
-#         "streamlit",
-#         "run",
-#         "test_ui.py",
-#         "--server.address=0.0.0.0",
-#         "--server.port=8501"
-#     ])
